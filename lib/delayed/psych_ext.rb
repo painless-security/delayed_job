@@ -61,9 +61,10 @@ module Delayed
           rescue Mongoid::Errors::DocumentNotFound => error
             raise Delayed::DeserializationError, "Mongoid::Errors::DocumentNotFound, class: #{klass}, primary key: #{id} (#{error.message})"
           end
-        when /^!ruby\/DataMapper:(.+)$/
-          klass = resolve_class(Regexp.last_match[1])
+        when /^!ruby\/DataMapper(,[^:]+)?:(.+)$/
+          klass = resolve_class(Regexp.last_match[2])
           payload = Hash[*object.children.map { |c| accept c }]
+          payload['attributes'] = payload if payload['attributes'].nil?
           begin
             primary_keys = klass.properties.select(&:key?)
             key_names = primary_keys.map { |p| p.name.to_s }
